@@ -52,16 +52,17 @@ public class Bot extends TelegramLongPollingBot {
             return;
         }
 
+        String userName = null;
         if (message.getFrom() != null) {
-            System.out.println(message.getFrom().getUserName());
+            userName = message.getFrom().getUserName();
         } else if (message.getSenderChat() != null) {
-            System.out.println(message.getSenderChat().getTitle());
+            userName = message.getSenderChat().getTitle();
         }
 
         String userContent = message.getText();
         Long chatId = message.getChatId();
-        System.out.printf("%s: [%s]\n", message.getFrom().getUserName(), userContent);
-        //if(UserFilter.isAllow(message.getFrom().getUserName())) {
+        System.out.printf("%s: [%s]\n", userName, userContent);
+        if(UserFilter.isAllow(userName)) {
             if(userContent.equals("/start")) {
                 sendText(chatId, "Поболтаем?");
             } else if(Pattern.compile(
@@ -81,9 +82,9 @@ public class Bot extends TelegramLongPollingBot {
                         .call()
                         .content();
             }
-        //} else {
-        //    sendText(chatId, "У вас нет доступа к этому боту.");
-        //}
+        } else {
+            sendText(chatId, "У вас нет доступа к этому боту.");
+        }
     }
 
     public void sendText(Long chatId, String msg) {
