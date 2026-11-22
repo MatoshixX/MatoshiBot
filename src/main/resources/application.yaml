@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: MatoshiBot
+
+  ai:
+    deepseek:
+      chat:
+        model: deepseek-flash
+        api-key: ${DEEPSEEK_API_KEY}
+        base-url: "https://api.deepseek.com"
+        max-tokens: 1000
