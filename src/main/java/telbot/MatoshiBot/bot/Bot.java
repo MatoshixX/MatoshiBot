@@ -2,6 +2,11 @@ package telbot.MatoshiBot.bot;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.deepseek.DeepSeekChatModel;
+import org.springframework.ai.session.DefaultSessionService;
+import org.springframework.ai.session.EventFilter;
+import org.springframework.ai.session.InMemorySessionRepository;
+import org.springframework.ai.session.SessionService;
+import org.springframework.ai.session.advisor.SessionAdvisors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -22,11 +27,17 @@ public class Bot extends TelegramLongPollingBot {
     public Bot(@Value("${telegram.bot.api-key}") final String botToken,
                @Value("${ai.deepseek.prompt.system-prompt}") final String systemPrompt,
                @Value("${ai.deepseek.prompt.context-prompt}") final String contextPrompt,
-               DeepSeekChatModel chatModel) {
+               DeepSeekChatModel chatModel,
+               SessionService sessionService) {
         this.botToken = botToken;
         this.contextPrompt = contextPrompt;
         this.chatClient = ChatClient.builder(chatModel)
                 .defaultSystem(systemPrompt)
+                .defaultAdvisors(
+                        SessionAdvisors.builder(sessionService)
+                                .memory(memory -> memory.eventFilter(EventFilter.lastN(10)))
+                                .build()
+                )
                 .build();
     }
 
@@ -47,12 +58,14 @@ public class Bot extends TelegramLongPollingBot {
         ).matcher(userContent).find()) {
             String modelContent = this.chatClient.prompt()
                     .user(userContent)
+                    .advisors(SessionAdvisors.session(chatId.toString()))
                     .call()
                     .content();
             sendText(chatId, modelContent);
         } else {
             String modelContent = this.chatClient.prompt()
                     .user(String.format("%s. %s", userContent, contextPrompt))
+                    .advisors(SessionAdvisors.session(chatId.toString()))
                     .call()
                     .content();
             System.out.println(modelContent);
