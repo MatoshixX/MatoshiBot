@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import telbot.MatoshiBot.filter.UserFilter;
@@ -42,10 +43,25 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        String userContent = update.getMessage().getText();
-        Long chatId = update.getMessage().getChatId();
-        System.out.printf("%s: [%s]\n", update.getMessage().getFrom().getUserName(), userContent);
-        if(UserFilter.isAllow(update.getMessage().getFrom().getUserName())) {
+        Message message;
+        if (update.hasMessage()) {
+            message = update.getMessage();
+        } else if (update.hasChannelPost()) {
+            message = update.getChannelPost();
+        } else {
+            return;
+        }
+
+        if (message.getFrom() != null) {
+            System.out.println(message.getFrom().getUserName());
+        } else if (message.getSenderChat() != null) {
+            System.out.println(message.getSenderChat().getTitle());
+        }
+
+        String userContent = message.getText();
+        Long chatId = message.getChatId();
+        System.out.printf("%s: [%s]\n", message.getFrom().getUserName(), userContent);
+        //if(UserFilter.isAllow(message.getFrom().getUserName())) {
             if(userContent.equals("/start")) {
                 sendText(chatId, "Поболтаем?");
             } else if(Pattern.compile(
@@ -65,9 +81,9 @@ public class Bot extends TelegramLongPollingBot {
                         .call()
                         .content();
             }
-        } else {
-            sendText(chatId, "У вас нет доступа к этому боту.");
-        }
+        //} else {
+        //    sendText(chatId, "У вас нет доступа к этому боту.");
+        //}
     }
 
     public void sendText(Long chatId, String msg) {
