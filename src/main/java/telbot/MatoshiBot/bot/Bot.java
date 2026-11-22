@@ -39,7 +39,7 @@ public class Bot extends TelegramLongPollingBot {
 
         if(userContent.equals("/start")) {
             sendText(chatId, "Поболтаем?");
-        } else if(userContent.matches("(Мат|Матоши|Матик|Матошик|Mat|Matoshi)*")) {
+        } else if(userContent.matches("\b(Мат|Матоши|Матик|Матошик|Mat|Matoshi)\b")) {
             String modelContent = this.chatClient.prompt()
                     .user(userContent)
                     .call()
