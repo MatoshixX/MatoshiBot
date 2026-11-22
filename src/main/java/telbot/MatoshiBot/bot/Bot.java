@@ -10,6 +10,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.regex.Pattern;
+
 @Component
 public class Bot extends TelegramLongPollingBot {
     private final String botToken;
@@ -39,7 +41,10 @@ public class Bot extends TelegramLongPollingBot {
 
         if(userContent.equals("/start")) {
             sendText(chatId, "Поболтаем?");
-        } else if(userContent.matches("(?s).*\\b(Мат|Матоши|Матик|Матошик|Mat|Matoshi)\\b.*")) {
+        } else if(Pattern.compile(
+                "(?<![\\p{L}\\p{N}_])(Мат|Матоши|Матик|Матошик|Mat|Matoshi)(?![\\p{L}\\p{N}_])",
+                Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+        ).matcher(userContent).find()) {
             String modelContent = this.chatClient.prompt()
                     .user(userContent)
                     .call()
