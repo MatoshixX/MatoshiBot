@@ -13,20 +13,45 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @Component
 public class Bot extends TelegramLongPollingBot {
     private final String botToken;
+    private final String contextPrompt;
     private final ChatClient chatClient;
 
     @Autowired
-    public Bot(@Value("${telegram.bot.api-key}") String botToken, DeepSeekChatModel chatModel) {
+    public Bot(@Value("${telegram.bot.api-key}") final String botToken,
+               @Value("${ai.deepseek.prompt.system-prompt}") final String systemPrompt,
+               @Value("${ai.deepseek.prompt.context-prompt}") final String contextPrompt,
+               DeepSeekChatModel chatModel) {
         this.botToken = botToken;
-        this.chatClient = ChatClient.builder(chatModel).build();
+        this.contextPrompt = contextPrompt;
+        this.chatClient = ChatClient.builder(chatModel)
+                .defaultSystem(systemPrompt)
+                .build();
     }
 
     @Override
     public void onUpdateReceived(Update update) {
         String userContent = update.getMessage().getText();
-        System.out.println(userContent);
-        String modelContent = this.chatClient.prompt().user(userContent).call().content();
-        sendText(update.getMessage().getChatId(), modelContent);
+        Long chatId = update.getMessage().getChatId();
+        System.out.printf("%s: [%s]\n", update.getMessage().getFrom().getUserName(), userContent);
+
+        //Filter
+        System.out.println(update.getMessage().getFrom().getUserName());
+
+        if(userContent.equals("/start")) {
+            sendText(chatId, "Поболтаем?");
+        } else if(userContent.matches("(Мат|Матоши|Матик|Матошик|Mat|Matoshi)*")) {
+            String modelContent = this.chatClient.prompt()
+                    .user(userContent)
+                    .call()
+                    .content();
+            sendText(chatId, modelContent);
+        } else {
+            String modelContent = this.chatClient.prompt()
+                    .user(String.format("%s. %s", userContent, contextPrompt))
+                    .call()
+                    .content();
+            System.out.println(modelContent);
+        }
     }
 
     public void sendText(Long chatId, String msg) {

@@ -8,8 +8,13 @@ spring:
         model: deepseek-flash
         api-key: ${DEEPSEEK_API_KEY}
         base-url: "https://api.deepseek.com"
-        max-tokens: 1000
+        max-tokens: 2000
 
+ai:
+  deepseek:
+    prompt:
+      system-prompt: ${SYSTEM_PROMPT}
+      context-prompt: ${CONTEXT_PROMPT}
 telegram:
   bot:
     api-key: ${TELEGRAM_API_KEY}
